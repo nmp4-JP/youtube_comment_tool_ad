@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube 修正コメント管理ツール v15</title>
+  <title>YouTube 修正コメント管理ツール（広告対応）</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- ✅ Google AdSense（あなたのコードをここに貼り付けてOK） -->
-  <!--
+  <!-- ✅ あなたのGoogle AdSense クライアントIDをここに -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxx"
      crossorigin="anonymous"></script>
-  -->
 
   <style>
     body {
@@ -23,71 +21,8 @@
       box-sizing: border-box;
     }
 
-    .video-section {
-      flex: 2;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .comment-section {
-      flex: 1;
-      border-left: 1px solid #ccc;
-      padding-left: 20px;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      box-sizing: border-box;
-    }
-
-    .video-url-input input,
-    .comment-input input {
-      width: 400px;
-      padding: 5px;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      overflow-y: auto;
-      flex-grow: 1;
-    }
-
-    li {
-      margin: 10px 0;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 8px;
-      position: relative;
-    }
-
-    .delete-btn {
-      position: absolute;
-      right: 0;
-      top: 0;
-      background: #f55;
-      color: white;
-      border: none;
-      padding: 3px 6px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.8em;
-    }
-
-    .fix-note {
-      margin-top: 5px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .fix-note textarea {
-      width: 95%;
-      height: 50px;
-      resize: none;
-      font-size: 0.9em;
-      padding: 5px;
-    }
+    .video-section { flex: 2; display: flex; flex-direction: column; }
+    .comment-section { flex: 1; border-left: 1px solid #ccc; padding-left: 20px; display: flex; flex-direction: column; }
 
     .btn {
       background: #007bff;
@@ -98,88 +33,59 @@
       font-size: 1em;
       cursor: pointer;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-      text-align: center;
       margin-top: 10px;
     }
 
-    .btn:hover {
-      background: #0056cc;
-    }
+    .btn:hover { background: #0056cc; }
 
-    #player-container {
-      position: relative;
-      width: 100%;
-      padding-bottom: 56.25%;
-      margin-top: 10px;
-    }
-
-    #player {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .comment-input {
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-    }
-
-    /* 📢 左下固定広告 */
     .ad-fixed {
       position: fixed;
       bottom: 15px;
       left: 15px;
-      background: #f9f9f9;
+      background: #fff;
       border: 1px solid #ddd;
       border-radius: 10px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-      padding: 8px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      padding: 6px;
       z-index: 9999;
-      width: 300px;
+      width: 320px;
       max-width: 90vw;
+      transition: opacity 0.3s ease;
     }
 
     .ad-close {
       position: absolute;
-      top: 3px;
-      right: 6px;
-      background: rgba(255, 255, 255, 0.8);
+      top: 2px;
+      right: 5px;
+      background: rgba(255,255,255,0.9);
       border: none;
       border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      cursor: pointer;
-      font-weight: bold;
+      width: 20px;
+      height: 20px;
       font-size: 14px;
-      color: #333;
-      line-height: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #444;
+      line-height: 18px;
       text-align: center;
     }
 
-    .ad-close:hover {
-      background: #ccc;
-    }
-
-    ins.adsbygoogle {
-      display: block;
-      text-align: center;
-    }
+    .ad-close:hover { background: #ddd; }
   </style>
 </head>
 <body>
   <div class="video-section">
-    <div class="video-url-input">
-      <input id="youtubeUrl" type="text" placeholder="YouTubeのURLを入力" />
+    <div>
+      <input id="youtubeUrl" type="text" placeholder="YouTubeのURLを入力" style="width:400px;">
       <button id="loadBtn">読み込み</button>
     </div>
 
-    <div id="player-container"><div id="player"></div></div>
+    <div id="player-container" style="position:relative;width:100%;padding-bottom:56.25%;margin-top:10px;">
+      <div id="player" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+    </div>
 
-    <div class="comment-input">
-      <input id="commentText" type="text" placeholder="修正コメントを入力（⌘+Enter で追加）" />
+    <div class="comment-input" style="margin-top:15px;">
+      <input id="commentText" type="text" placeholder="修正コメントを入力（⌘+Enter で追加）" style="width:400px;">
       <button id="addComment">追加</button>
     </div>
 
@@ -188,36 +94,36 @@
 
   <div class="comment-section">
     <h3>修正コメント一覧</h3>
-    <ul id="commentList"></ul>
+    <ul id="commentList" style="list-style:none; padding:0; margin:0; overflow-y:auto; flex:1;"></ul>
   </div>
 
-  <!-- 📢 左下固定Google広告 -->
+  <!-- ✅ 左下固定広告 -->
   <div class="ad-fixed" id="adBox">
-    <button class="ad-close" onclick="document.getElementById('adBox').style.display='none'">×</button>
-    <!-- 👇 あなたの広告コードをここに貼り付け 👇 -->
+    <button class="ad-close" id="closeAd">×</button>
     <ins class="adsbygoogle"
       style="display:block"
-      data-ad-client="ca-pub-3201548239311514"
-      data-ad-slot="4908931536"
+      data-ad-client="ca-pub-xxxxxxxxxxxxxx"
+      data-ad-slot="1234567890"
       data-ad-format="auto"
       data-full-width-responsive="true"></ins>
-    <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
-    <!-- 👆 ここまで 👆 -->
   </div>
+
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+    document.getElementById("closeAd").addEventListener("click", () => {
+      document.getElementById("adBox").style.display = "none";
+    });
+  </script>
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
     let player;
     let comments = [];
-    let videoTitle = "YouTube動画";
     let currentVideoId = null;
+    let videoTitle = "YouTube動画";
 
     function onYouTubeIframeAPIReady() {
       player = new YT.Player("player", {
-        width: "100%",
-        height: "100%",
         videoId: "dQw4w9WgXcQ",
         events: {
           onReady: () => fetchVideoTitle(player.getVideoData().video_id)
@@ -225,25 +131,23 @@
       });
     }
 
-    async function fetchVideoTitle(videoId) {
+    async function fetchVideoTitle(id) {
       try {
-        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+        const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`);
         const data = await res.json();
-        if (data && data.title) videoTitle = data.title.replace(/[\\/:*?"<>|]/g, "");
-      } catch (e) {
-        console.warn("動画タイトル取得エラー:", e);
-      }
+        if (data.title) videoTitle = data.title.replace(/[\\/:*?"<>|]/g, "");
+      } catch {}
     }
 
     function extractVideoId(url) {
-      const match = url.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+      const match = url.match(/(?:v=|youtu\\.be\\/|embed\\/)([A-Za-z0-9_-]{11})/);
       return match ? match[1] : null;
     }
 
-    document.getElementById("loadBtn").addEventListener("click", async () => {
+    document.getElementById("loadBtn").onclick = async () => {
       const url = document.getElementById("youtubeUrl").value;
       const id = extractVideoId(url);
-      if (id && player) {
+      if (id) {
         if (currentVideoId && currentVideoId !== id) {
           localStorage.removeItem("yt_fix_comments");
           comments = [];
@@ -255,20 +159,19 @@
       } else {
         alert("有効なYouTube URLを入力してください。");
       }
-    });
+    };
 
     function addComment() {
       if (!player || !player.getCurrentTime) return;
       const text = document.getElementById("commentText").value.trim();
       if (!text) return;
-      const time = player.getCurrentTime();
-      comments.push({ id: Date.now(), time, text, note: "", done: false });
+      comments.push({ id: Date.now(), time: player.getCurrentTime(), text, note: "" });
       document.getElementById("commentText").value = "";
       saveComments();
       renderComments(true);
     }
 
-    document.getElementById("addComment").addEventListener("click", addComment);
+    document.getElementById("addComment").onclick = addComment;
     document.getElementById("commentText").addEventListener("keydown", (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
@@ -276,69 +179,21 @@
       }
     });
 
-    function formatTime(seconds) {
-      const m = Math.floor(seconds / 60);
-      const s = Math.floor(seconds % 60).toString().padStart(2, "0");
-      return `${m}:${s}`;
-    }
-
-    function renderComments(scrollToBottom = false) {
+    function renderComments(scroll = false) {
       const list = document.getElementById("commentList");
       list.innerHTML = "";
-      comments.sort((a, b) => a.time - b.time).forEach((c) => {
-        const li = document.createElement("li");
-        const mainText = document.createElement("div");
-        mainText.textContent = `[${formatTime(c.time)}] ${c.text}`;
-        mainText.style.cursor = "pointer";
-        mainText.onclick = () => player.seekTo(parseFloat(c.time));
-
-        const fixNote = document.createElement("div");
-        fixNote.className = "fix-note";
-        const noteLabel = document.createElement("label");
-        noteLabel.textContent = "追記事項：";
-        const textarea = document.createElement("textarea");
-        textarea.value = c.note;
-        textarea.oninput = (e) => { c.note = e.target.value; saveComments(); };
-
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "削除";
-        delBtn.className = "delete-btn";
-        delBtn.onclick = () => {
-          comments = comments.filter((x) => x.id !== c.id);
-          saveComments();
-          renderComments();
-        };
-
-        fixNote.append(noteLabel, textarea);
-        li.append(mainText, fixNote, delBtn);
-        list.append(li);
+      comments.sort((a,b)=>a.time-b.time).forEach(c=>{
+        const li=document.createElement("li");
+        li.innerHTML = `[${formatTime(c.time)}] ${c.text}`;
+        list.appendChild(li);
       });
-
-      if (scrollToBottom) {
-        list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
-      }
+      if(scroll) list.scrollTo({ top:list.scrollHeight, behavior:"smooth" });
     }
 
-    document.getElementById("downloadBtn").addEventListener("click", () => {
-      if (comments.length === 0) return alert("コメントがありません。");
-
-      const data = comments.map((c) => ({
-        修正済み: c.done ? "☑" : "☐",
-        タイムコード: formatTime(c.time),
-        修正コメント: c.text,
-        追記事項: c.note
-      }));
-
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "修正コメント");
-      const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([wbout], { type: "application/octet-stream" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${videoTitle}_修正リスト.xlsx`;
-      a.click();
-    });
+    function formatTime(t) {
+      const m = Math.floor(t/60), s = Math.floor(t%60).toString().padStart(2,"0");
+      return `${m}:${s}`;
+    }
 
     function saveComments() {
       localStorage.setItem("yt_fix_comments", JSON.stringify(comments));
@@ -346,7 +201,7 @@
 
     function loadComments() {
       const saved = localStorage.getItem("yt_fix_comments");
-      if (saved) comments = JSON.parse(saved);
+      if(saved) comments = JSON.parse(saved);
       renderComments();
     }
 
