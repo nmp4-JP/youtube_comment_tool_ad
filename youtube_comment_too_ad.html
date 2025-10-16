@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube 修正コメント管理ツール v15</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- ✅ Google AdSense（あなたのコードをここに貼り付けてOK） -->
+  <!--
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxx"
+     crossorigin="anonymous"></script>
+  -->
+
   <style>
     body {
       font-family: sans-serif;
@@ -15,11 +22,14 @@
       height: 100vh;
       box-sizing: border-box;
     }
+
     .video-section {
       flex: 2;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
+
     .comment-section {
       flex: 1;
       border-left: 1px solid #ccc;
@@ -29,33 +39,28 @@
       height: 100%;
       box-sizing: border-box;
     }
+
     .video-url-input input,
     .comment-input input {
       width: 400px;
       padding: 5px;
     }
-    .video-url-input button,
-    .comment-input button {
-      padding: 5px 10px;
-      margin-left: 5px;
-    }
+
     ul {
       list-style: none;
       padding: 0;
       margin: 0;
       overflow-y: auto;
       flex-grow: 1;
-      height: 100%;
     }
+
     li {
       margin: 10px 0;
       border-bottom: 1px solid #eee;
       padding-bottom: 8px;
       position: relative;
     }
-    li:hover {
-      background: #f9f9f9;
-    }
+
     .delete-btn {
       position: absolute;
       right: 0;
@@ -68,15 +73,14 @@
       cursor: pointer;
       font-size: 0.8em;
     }
-    .delete-btn:hover {
-      background: #d33;
-    }
+
     .fix-note {
       margin-top: 5px;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
+
     .fix-note textarea {
       width: 95%;
       height: 50px;
@@ -84,12 +88,7 @@
       font-size: 0.9em;
       padding: 5px;
     }
-    .button-group {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
+
     .btn {
       background: #007bff;
       color: white;
@@ -100,16 +99,20 @@
       cursor: pointer;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
       text-align: center;
+      margin-top: 10px;
     }
+
     .btn:hover {
       background: #0056cc;
     }
+
     #player-container {
       position: relative;
       width: 100%;
       padding-bottom: 56.25%;
       margin-top: 10px;
     }
+
     #player {
       position: absolute;
       top: 0;
@@ -117,58 +120,52 @@
       width: 100%;
       height: 100%;
     }
+
     .comment-input {
       margin-top: 15px;
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-    h3 {
-      margin-top: 0;
     }
 
-    /* 左下広告（閉じるボタン付き） */
-    #floating-ad {
+    /* 📢 左下固定広告 */
+    .ad-fixed {
       position: fixed;
       bottom: 15px;
       left: 15px;
-      width: 320px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      padding: 8px;
       z-index: 9999;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-      overflow: hidden;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      width: 300px;
+      max-width: 90vw;
     }
-    #floating-ad.hidden {
-      opacity: 0;
-      transform: translateY(30px);
-      pointer-events: none;
-    }
-    #ad-close-btn {
+
+    .ad-close {
       position: absolute;
-      top: 2px;
+      top: 3px;
       right: 6px;
-      background: rgba(0,0,0,0.5);
-      color: white;
+      background: rgba(255, 255, 255, 0.8);
       border: none;
       border-radius: 50%;
       width: 22px;
       height: 22px;
-      font-size: 14px;
       cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      color: #333;
       line-height: 22px;
       text-align: center;
     }
-    #ad-close-btn:hover {
-      background: rgba(0,0,0,0.8);
+
+    .ad-close:hover {
+      background: #ccc;
     }
-    @media (max-width: 600px) {
-      #floating-ad {
-        width: 90%;
-        left: 5%;
-        bottom: 10px;
-      }
+
+    ins.adsbygoogle {
+      display: block;
+      text-align: center;
     }
   </style>
 </head>
@@ -182,13 +179,11 @@
     <div id="player-container"><div id="player"></div></div>
 
     <div class="comment-input">
-      <input id="commentText" type="text" placeholder="修正コメントを入力（⌘+Enter / Ctrl+Enter で追加）" />
+      <input id="commentText" type="text" placeholder="修正コメントを入力（⌘+Enter で追加）" />
       <button id="addComment">追加</button>
     </div>
 
-    <div class="button-group">
-      <button id="downloadBtn" class="btn">📄 修正リストをダウンロード</button>
-    </div>
+    <button id="downloadBtn" class="btn">📄 修正リストをダウンロード</button>
   </div>
 
   <div class="comment-section">
@@ -196,20 +191,20 @@
     <ul id="commentList"></ul>
   </div>
 
-  <!-- 左下Google広告（閉じるボタン付き） -->
-  <div id="floating-ad">
-    <button id="ad-close-btn">×</button>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1234567890"
-        crossorigin="anonymous"></script>
+  <!-- 📢 左下固定Google広告 -->
+  <div class="ad-fixed" id="adBox">
+    <button class="ad-close" onclick="document.getElementById('adBox').style.display='none'">×</button>
+    <!-- 👇 あなたの広告コードをここに貼り付け 👇 -->
     <ins class="adsbygoogle"
-        style="display:block"
-        data-ad-client="ca-pub-1234567890"
-        data-ad-slot="9876543210"
-        data-ad-format="auto"
-        data-full-width-responsive="true"></ins>
+      style="display:block"
+      data-ad-client="ca-pub-3201548239311514"
+      data-ad-slot="4908931536"
+      data-ad-format="auto"
+      data-full-width-responsive="true"></ins>
     <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
+      (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
+    <!-- 👆 ここまで 👆 -->
   </div>
 
   <script src="https://www.youtube.com/iframe_api"></script>
@@ -224,7 +219,9 @@
         width: "100%",
         height: "100%",
         videoId: "dQw4w9WgXcQ",
-        events: { onReady: () => fetchVideoTitle(player.getVideoData().video_id) }
+        events: {
+          onReady: () => fetchVideoTitle(player.getVideoData().video_id)
+        }
       });
     }
 
@@ -232,8 +229,10 @@
       try {
         const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
         const data = await res.json();
-        if (data && data.title) videoTitle = data.title.replace(/[\\\\/:*?"<>|]/g, "");
-      } catch (e) { console.warn("動画タイトルを取得できませんでした:", e); }
+        if (data && data.title) videoTitle = data.title.replace(/[\\/:*?"<>|]/g, "");
+      } catch (e) {
+        console.warn("動画タイトル取得エラー:", e);
+      }
     }
 
     function extractVideoId(url) {
@@ -253,7 +252,9 @@
         currentVideoId = id;
         player.loadVideoById(id);
         await fetchVideoTitle(id);
-      } else alert("有効なYouTube URLを入力してください。");
+      } else {
+        alert("有効なYouTube URLを入力してください。");
+      }
     });
 
     function addComment() {
@@ -266,9 +267,13 @@
       saveComments();
       renderComments(true);
     }
+
     document.getElementById("addComment").addEventListener("click", addComment);
     document.getElementById("commentText").addEventListener("keydown", (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); addComment(); }
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        addComment();
+      }
     });
 
     function formatTime(seconds) {
@@ -293,7 +298,6 @@
         noteLabel.textContent = "追記事項：";
         const textarea = document.createElement("textarea");
         textarea.value = c.note;
-        textarea.placeholder = "補足や経過などを記入";
         textarea.oninput = (e) => { c.note = e.target.value; saveComments(); };
 
         const delBtn = document.createElement("button");
@@ -305,24 +309,26 @@
           renderComments();
         };
 
-        fixNote.appendChild(noteLabel);
-        fixNote.appendChild(textarea);
-        li.appendChild(mainText);
-        li.appendChild(fixNote);
-        li.appendChild(delBtn);
-        list.appendChild(li);
+        fixNote.append(noteLabel, textarea);
+        li.append(mainText, fixNote, delBtn);
+        list.append(li);
       });
-      if (scrollToBottom) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+
+      if (scrollToBottom) {
+        list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+      }
     }
 
     document.getElementById("downloadBtn").addEventListener("click", () => {
       if (comments.length === 0) return alert("コメントがありません。");
+
       const data = comments.map((c) => ({
         修正済み: c.done ? "☑" : "☐",
         タイムコード: formatTime(c.time),
         修正コメント: c.text,
         追記事項: c.note
       }));
+
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "修正コメント");
@@ -337,16 +343,14 @@
     function saveComments() {
       localStorage.setItem("yt_fix_comments", JSON.stringify(comments));
     }
+
     function loadComments() {
       const saved = localStorage.getItem("yt_fix_comments");
-      if (saved) { comments = JSON.parse(saved); renderComments(); }
+      if (saved) comments = JSON.parse(saved);
+      renderComments();
     }
-    window.addEventListener("load", loadComments);
 
-    // 広告の閉じるボタン機能
-    document.getElementById("ad-close-btn").addEventListener("click", () => {
-      document.getElementById("floating-ad").classList.add("hidden");
-    });
+    window.addEventListener("load", loadComments);
   </script>
 </body>
 </html>
